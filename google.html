@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Google 镜像</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        iframe { width: 100%; height: 90vh; border: none; }
+    </style>
+</head>
+<body>
+    <p>正在通过手机住宅IP加载 Google...</p>
+    <iframe id="googleFrame" src="" style="display:none;"></iframe>
+
+    <script>
+        // ⚠️ 把你的 Cloudflared 隧道地址填在这里 ⚠️
+        const PROXY_HOST = "https://你的隧道地址.trycloudflare.com";
+        
+        // 直接通过手机代理加载 Google
+        const proxyUrl = PROXY_HOST + '/proxy?url=' + encodeURIComponent('https://www.google.com');
+        
+        // 设置 iframe 的 src，并显示它
+        const frame = document.getElementById('googleFrame');
+        frame.src = proxyUrl;
+        frame.onload = function() {
+            document.querySelector('p').style.display = 'none';
+            frame.style.display = 'block';
+        };
+    </script>
+</body>
+</html>
