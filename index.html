@@ -4,17 +4,38 @@
 <meta charset="UTF-8">
 <title>GitHub Pages Proxy</title>
 <script>
-    // 获取 URL 参数中目标网址，例如 ?url=https://www.google.com
     const params = new URLSearchParams(window.location.search);
     const targetUrl = params.get('url');
-    
+
     if (targetUrl) {
-        // 通过 CORS 代理去请求目标网站（这里用一个公共的 CORS 代理）
+        const targetOrigin = new URL(targetUrl).origin;
+
         fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl))
             .then(response => response.text())
             .then(html => {
+                // 创建一个临时的DOM元素来解析和处理HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 修复相对路径的资源（图片、链接、脚本等）
+                const elements = doc.querySelectorAll('img, script, link[rel="stylesheet"], a, image');
+                elements.forEach(el => {
+                    const srcAttr = el.getAttribute('src') || el.getAttribute('href');
+                    if (srcAttr && !srcAttr.startsWith('http') && !srcAttr.startsWith('data:')) {
+                        // 拼接成绝对路径
+                        const absoluteUrl = new URL(srcAttr, targetOrigin).href;
+                        if (el.hasAttribute('src')) {
+                            el.setAttribute('src', absoluteUrl);
+                        }
+                        if (el.hasAttribute('href')) {
+                            el.setAttribute('href', absoluteUrl);
+                        }
+                    }
+                });
+
+                // 将修复后的HTML内容写入当前文档
                 document.open();
-                document.write(html);
+                document.write(doc.documentElement.outerHTML);
                 document.close();
             })
             .catch(err => {
